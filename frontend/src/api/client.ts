@@ -4,20 +4,16 @@ const BASE = '/api';
 
 export type ApiError = { error: string; details?: unknown };
 
-const buildHeaders = (extra?: HeadersInit): HeadersInit => {
-  const session = useSessionStore.getState().session;
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-  if (session) headers['Authorization'] = `Bearer ${session.token}`;
-  return { ...headers, ...(extra as Record<string, string>) };
-};
-
 const request = async <T>(path: string, init: RequestInit = {}): Promise<T> => {
-  const res = await fetch(`${BASE}${path}`, {
-    ...init,
-    headers: buildHeaders(init.headers),
-  });
+  const session = useSessionStore.getState().session;
+  const headers: Record<string, string> = {};
+  if (init.body !== undefined && init.body !== null) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (session) headers['Authorization'] = `Bearer ${session.token}`;
+  if (init.headers) Object.assign(headers, init.headers as Record<string, string>);
+
+  const res = await fetch(`${BASE}${path}`, { ...init, headers });
   if (res.status === 401) {
     useSessionStore.getState().logout();
   }
