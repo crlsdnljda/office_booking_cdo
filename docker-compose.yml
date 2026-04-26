@@ -4,7 +4,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: office
-      POSTGRES_PASSWORD: office
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: office_booking
     volumes:
       - office_booking_db:/var/lib/postgresql/data
@@ -20,17 +20,23 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    env_file: ./backend/.env
-    ports:
-      - '3001:3001'
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      DATABASE_URL: postgresql://office:${POSTGRES_PASSWORD}@postgres:5432/office_booking?schema=public
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_PIN: ${ADMIN_PIN}
+      EVOLUTION_API_URL: ${EVOLUTION_API_URL}
+      EVOLUTION_API_KEY: ${EVOLUTION_API_KEY}
+      EVOLUTION_INSTANCE_NAME: ${EVOLUTION_INSTANCE_NAME}
+      EVOLUTION_GROUP_JID: ${EVOLUTION_GROUP_JID}
+      TZ: Europe/Madrid
 
   frontend:
     build: ./frontend
     restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - '8090:80'
 
 volumes:
   office_booking_db:
