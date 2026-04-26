@@ -69,6 +69,19 @@ export const ReservationsPage = () => {
   }, [data]);
 
 
+  const RELEASE_ERROR: Record<string, string> = {
+    not_found: 'Esta reserva ya no existe.',
+    forbidden: 'No puedes liberar esta reserva.',
+    already_released: 'Esta reserva ya estaba liberada.',
+    already_ended: 'Esta reserva ya termino.',
+  };
+
+  const DELETE_ERROR: Record<string, string> = {
+    not_found: 'Esta reserva ya no existe.',
+    forbidden: 'No puedes eliminar esta reserva.',
+    already_started: 'La reserva ya empezo. Usa "Liberar ahora" en su lugar.',
+  };
+
   const doRelease = async () => {
     if (!confirmRelease) return;
     setActionPending(true);
@@ -77,8 +90,10 @@ export const ReservationsPage = () => {
       await api.post(`/reservations/${confirmRelease.id}/release`);
       setConfirmRelease(null);
       mutate();
-    } catch {
-      setActionError('No se ha podido liberar la reserva.');
+    } catch (err: unknown) {
+      const code = (err as { error?: string })?.error ?? '';
+      setActionError(RELEASE_ERROR[code] ?? 'No se ha podido liberar la reserva.');
+      mutate();
     } finally {
       setActionPending(false);
     }
@@ -92,8 +107,10 @@ export const ReservationsPage = () => {
       await api.delete(`/reservations/${confirmDelete.id}`);
       setConfirmDelete(null);
       mutate();
-    } catch {
-      setActionError('No se ha podido eliminar la reserva.');
+    } catch (err: unknown) {
+      const code = (err as { error?: string })?.error ?? '';
+      setActionError(DELETE_ERROR[code] ?? 'No se ha podido eliminar la reserva.');
+      mutate();
     } finally {
       setActionPending(false);
     }
